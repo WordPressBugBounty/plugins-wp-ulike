@@ -4,7 +4,7 @@
  *
  * 
  * @package    wp-ulike
- * @author     TechnoWich 2025
+ * @author     TechnoWich 2026
  * @link       https://wpulike.com
  */
 
@@ -58,18 +58,29 @@ class WpUlikeInit {
 
   private function maybe_upgrade_database(){
     $current_version = get_option( 'wp_ulike_dbVersion', WP_ULIKE_DB_VERSION );
-    // Check database upgrade if needed
-    if ( version_compare( $current_version, '2.1', '<' ) ) {
-      wp_ulike_activator::get_instance()->upgrade_0();
-    }
-    if ( version_compare( $current_version, '2.2', '<' ) ) {
-      wp_ulike_activator::get_instance()->upgrade_1();
-    }
-    if ( version_compare( $current_version, '2.3', '<' ) ) {
-      wp_ulike_activator::get_instance()->upgrade_2();
-    }
-    if ( version_compare( $current_version, '2.4', '<' ) ) {
-      wp_ulike_activator::get_instance()->upgrade_3();
+    $activator = wp_ulike_activator::get_instance();
+
+    // Define upgrade path with version and method mapping
+    $upgrades = array(
+      '2.1' => 'upgrade_0',
+      '2.2' => 'upgrade_1',
+      '2.3' => 'upgrade_2',
+      '2.4' => 'upgrade_3',
+    );
+
+    // Execute upgrades sequentially, stopping on failure
+    foreach ( $upgrades as $version => $method ) {
+      if ( version_compare( $current_version, $version, '<' ) ) {
+        $result = $activator->$method();
+        if ( false === $result ) {
+          if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( sprintf( 'WP ULike: Database upgrade to version %s failed. Current version: %s', $version, $current_version ) );
+          }
+          break; // Stop on failure to prevent partial upgrades
+        }
+        // Update current version after successful upgrade
+        $current_version = $version;
+      }
     }
   }
 
@@ -101,6 +112,7 @@ class WpUlikeInit {
     // a custom directory in uploads directory for storing custom files. Default uploads/{WP_ULIKE_SLUG}
     $uploads = wp_get_upload_dir();
     define( 'WP_ULIKE_CUSTOM_DIR' , $uploads['basedir'] . '/' . WP_ULIKE_SLUG );
+    define( 'WP_ULIKE_CUSTOM_URL' , $uploads['baseurl'] . '/' . WP_ULIKE_SLUG );
   }
 
   /**
@@ -220,7 +232,7 @@ class WpUlikeInit {
    * @return bool
    */
   public static function is_rest() {
-    return defined( 'REST_REQUEST' );
+    return defined( 'REST_REQUEST' ) && REST_REQUEST;
   }
 
   /**

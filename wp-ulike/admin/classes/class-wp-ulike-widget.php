@@ -3,7 +3,7 @@
  * Class for our widget support
  * 
  * @package    wp-ulike
- * @author     TechnoWich 2025
+ * @author     TechnoWich 2026
  * @link       https://wpulike.com
  */
 
@@ -436,23 +436,17 @@ if ( ! class_exists( 'wp_ulike_widget' ) ) {
 		 *
 		 * @author       	Alimir
 		 * @since           2.4
+		 * @deprecated      4.8.3 Use wp_ulike_get_period_limit_sql() instead
 		 * @return			String
 		 */
 	    public function period($period){
-	        switch ($period) {
-				case "today":
-					return "AND DATE(date_time) = DATE(NOW())";
-				case "yesterday":
-					return "AND DATE(date_time) = DATE(subdate(current_date, 1))";
-				case "week":
-					return "AND week(DATE(date_time)) = week(DATE(NOW()))";
-				case "month":
-					return "AND month(DATE(date_time)) = month(DATE(NOW()))";
-				case "year":
-					return "AND year(DATE(date_time)) = year(DATE(NOW()))";
-				default:
-					return "";
-	        }
+			// Deprecated: This method uses functions on columns which prevent index usage
+			// Use wp_ulike_get_period_limit_sql() instead for optimized queries
+			_deprecated_function( __METHOD__, '4.8.3', 'wp_ulike_get_period_limit_sql()' );
+			
+			// Return optimized version using the new function
+			$period_limit = wp_ulike_get_period_limit_sql( $period );
+			return $period_limit ? $period_limit : '';
 	    }
 
 		/**

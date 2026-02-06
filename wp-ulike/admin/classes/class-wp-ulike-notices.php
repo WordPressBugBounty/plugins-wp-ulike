@@ -3,7 +3,7 @@
  * Wp ULike Admin Notices
  * 
  * @package    wp-ulike
- * @author     TechnoWich 2025
+ * @author     TechnoWich 2026
  * @link       https://wpulike.com
 */
 
@@ -114,7 +114,10 @@ if ( ! class_exists( 'wp_ulike_notices' ) ) {
                 return;
             }
 
-            return $before . $this->args['description'] . $after;
+            // Allow safe HTML in description
+            $description = wp_kses_post( $this->args['description'] );
+
+            return $before . $description . $after;
         }
 
         /**

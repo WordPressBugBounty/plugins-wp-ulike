@@ -3,7 +3,7 @@
  * Admin Functions
  * 
  * @package    wp-ulike
- * @author     TechnoWich 2025
+ * @author     TechnoWich 2026
  * @link       https://wpulike.com
  */
 
@@ -77,8 +77,15 @@ function wp_ulike_widget_button_callback( $atts = array() ){
         'extra_classes' => '', // custom css class names for this element
     );
 
-    $result = $parsed_args = wp_parse_args( $atts, $default_atts );
-	extract( $result );
+    $parsed_args = wp_parse_args( $atts, $default_atts );
+	$label = isset( $parsed_args['label'] ) ? $parsed_args['label'] : '';
+	$color_name = isset( $parsed_args['color_name'] ) ? $parsed_args['color_name'] : 'default';
+	$link = isset( $parsed_args['link'] ) ? $parsed_args['link'] : '';
+	$target = isset( $parsed_args['target'] ) ? $parsed_args['target'] : '_self';
+	$nofollow = isset( $parsed_args['nofollow'] ) ? $parsed_args['nofollow'] : false;
+	$btn_attrs = isset( $parsed_args['btn_attrs'] ) ? $parsed_args['btn_attrs'] : '';
+	$custom_styles = isset( $parsed_args['custom_styles'] ) ? $parsed_args['custom_styles'] : array();
+	$extra_classes = isset( $parsed_args['extra_classes'] ) ? $parsed_args['extra_classes'] : '';
 
     // --------------------------------------------
     $btn_css_classes = array( 'wp-ulike-btn' );
@@ -270,24 +277,6 @@ function wp_ulike_get_notice_render( $args = array() ){
 	$notice_instance->render();
 }
 
-/**
- * Stores css content in custom css file (#admin)
- *
- * @return boolean            Returns true if the file is created and updated successfully, false on failure
- */
-function wp_ulike_save_custom_css(){
-    $css_string = wp_ulike_get_custom_style();
-    $css_string = wp_ulike_minify_css( $css_string );
-
-    if ( ! empty( $css_string ) && wp_ulike_put_contents_dir( $css_string, 'custom.css' ) ) {
-        update_option( 'wp_ulike_use_inline_custom_css' , 0 ); // disable inline css output
-        return true;
-    // if the directory is not writable, try inline css fallback
-    } else {
-        update_option( 'wp_ulike_use_inline_custom_css' , 1 ); // save css rules as option to print as inline css
-        return false;
-    }
-}
 
 /**
  * Minify CSS

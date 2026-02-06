@@ -3,7 +3,7 @@
  * Wp ULike FrontEnd Scripts Class.
  * 
  * @package    wp-ulike
- * @author     TechnoWich 2025
+ * @author     TechnoWich 2026
  * @link       https://wpulike.com
 */
 
@@ -47,16 +47,16 @@ if ( ! class_exists( 'wp_ulike_frontend_assets' ) ) {
 
 	        wp_enqueue_style( WP_ULIKE_SLUG, WP_ULIKE_ASSETS_URL . '/css/wp-ulike.min.css', array(), WP_ULIKE_VERSION );
 
-			// load custom.css if the directory is writable. else use inline css fallback - Make sure the auxin-elements is installed
-			if( ! wp_ulike_is_true( get_option( 'wp_ulike_use_inline_custom_css', true ) ) &&
-			! wp_ulike_is_true( wp_ulike_get_option( 'enable_inline_custom_css', false ) ) ){
-				$uploads   = wp_get_upload_dir();
-				$css_file  = $uploads['baseurl'] . '/' . WP_ULIKE_SLUG . '/custom.css';
+			// Check user preference for CSS delivery method
+			$user_prefers_inline = wp_ulike_is_true( wp_ulike_get_option( 'enable_inline_custom_css', false ) );
+			$directory_not_writable = wp_ulike_is_true( get_option( 'wp_ulike_use_inline_custom_css', true ) );
 
-				wp_enqueue_style( WP_ULIKE_SLUG . '-custom', $css_file, array( WP_ULIKE_SLUG ), WP_ULIKE_VERSION );
-			} else {
-				//add your custom style from setting panel.
+			// Use inline CSS if user prefers it OR directory is not writable (fallback)
+			if( $user_prefers_inline || $directory_not_writable ){
+				//add your custom style from setting panel (now includes customizer CSS).
 				wp_add_inline_style( WP_ULIKE_SLUG, wp_ulike_get_custom_style() );
+			} else {
+				wp_enqueue_style( WP_ULIKE_SLUG . '-custom', WP_ULIKE_CUSTOM_URL . '/custom.css', array( WP_ULIKE_SLUG ), WP_ULIKE_VERSION );
 			}
 
 	  	}
@@ -67,20 +67,21 @@ if ( ! class_exists( 'wp_ulike_frontend_assets' ) ) {
 	     * @return void
 	     */
 	  	public function load_scripts() {
-			// Return if pro assets exist
-			if( defined( 'WP_ULIKE_PRO_VERSION' ) && version_compare( WP_ULIKE_PRO_VERSION, '1.5.3' ) > 0 ){
+			// Return if pro assets exist (Pro >= 1.5.3 includes free scripts, so don't load free version)
+			if( defined( 'WP_ULIKE_PRO_VERSION' ) && version_compare( WP_ULIKE_PRO_VERSION, '1.5.3', '>=' ) ){
 				return;
 			}
 
 			//Add wp_ulike script file with special functions.
-			wp_enqueue_script( 'wp_ulike', WP_ULIKE_ASSETS_URL . '/js/wp-ulike.min.js', array( 'jquery' ), WP_ULIKE_VERSION, true );
+			wp_enqueue_script( 'wp_ulike', WP_ULIKE_ASSETS_URL . '/js/wp-ulike.min.js', array(), WP_ULIKE_VERSION, true );
 
 			//localize script
 			wp_localize_script( 'wp_ulike', 'wp_ulike_params', array(
 				'ajax_url'      => admin_url( 'admin-ajax.php' ),
-				'notifications' => wp_ulike_get_option( 'enable_toast_notice' )
+				'notifications' => wp_ulike_get_option( 'enable_toast_notice', true )
 			));
 	  	}
+
 
 	}
 
