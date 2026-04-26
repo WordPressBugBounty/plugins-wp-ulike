@@ -323,8 +323,11 @@ function wp_ulike_save_settings_api(){
 		wp_send_json_error( esc_html__( 'Error: You do not have permission to do that.', 'wp-ulike' ) );
 	}
 
-	// Get JSON data from request body
-	$json = file_get_contents( 'php://input' );
+	$max_body = defined( 'MB_IN_BYTES' ) ? 2 * MB_IN_BYTES : 2097152;
+	$json     = wp_ulike_read_php_input_capped( $max_body );
+	if ( is_wp_error( $json ) ) {
+		wp_send_json_error( $json->get_error_message() );
+	}
 	$values = json_decode( $json, true );
 
 	if ( ! is_array( $values ) ) {
@@ -400,8 +403,11 @@ function wp_ulike_save_customizer_api(){
 		wp_send_json_error( esc_html__( 'Error: You do not have permission to do that.', 'wp-ulike' ) );
 	}
 
-	// Get JSON data from request body
-	$json = file_get_contents( 'php://input' );
+	$max_body = defined( 'MB_IN_BYTES' ) ? 2 * MB_IN_BYTES : 2097152;
+	$json     = wp_ulike_read_php_input_capped( $max_body );
+	if ( is_wp_error( $json ) ) {
+		wp_send_json_error( $json->get_error_message() );
+	}
 	$values = json_decode( $json, true );
 
 	if ( ! is_array( $values ) ) {
