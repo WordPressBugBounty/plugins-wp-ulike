@@ -36,8 +36,14 @@ $group_order    = array( 'engagement', 'setup', 'pro' );
 
 	<?php if ( 'success' === $import_flash ) : ?>
 		<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings imported and saved successfully!', 'wp-ulike' ); ?></p></div>
-	<?php elseif ( 'error' === $import_flash ) : ?>
+	<?php elseif ( 'error_upload' === $import_flash ) : ?>
+		<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'No settings file was uploaded. Choose a JSON file and try again.', 'wp-ulike' ); ?></p></div>
+	<?php elseif ( 'error_json' === $import_flash ) : ?>
 		<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Invalid JSON format. Please check your JSON syntax.', 'wp-ulike' ); ?></p></div>
+	<?php elseif ( 'error_payload' === $import_flash ) : ?>
+		<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'This file does not look like a WP ULike settings export. Use a file downloaded from Help → Export Settings.', 'wp-ulike' ); ?></p></div>
+	<?php elseif ( 'error' === $import_flash ) : ?>
+		<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Settings import failed. Please try again.', 'wp-ulike' ); ?></p></div>
 	<?php endif; ?>
 
 	<div class="wp-ulike-about__layout">
@@ -143,7 +149,7 @@ $group_order    = array( 'engagement', 'setup', 'pro' );
 					<?php if ( ! empty( $upsell['features'] ) && is_array( $upsell['features'] ) ) : ?>
 						<ul class="wp-ulike-about-upsell__features">
 							<?php foreach ( $upsell['features'] as $feature ) : ?>
-								<li class="wp-ulike-about-upsell__feature">
+								<li class="wp-ulike-about-upsell__feature<?php echo ! empty( $feature['highlight'] ) ? ' wp-ulike-about-upsell__feature--highlight' : ''; ?>">
 									<span class="dashicons dashicons-<?php echo esc_attr( $feature['icon'] ?? 'yes-alt' ); ?>" aria-hidden="true"></span>
 									<span class="wp-ulike-about-upsell__feature-body">
 										<strong class="wp-ulike-about-upsell__feature-title"><?php echo esc_html( $feature['title'] ?? '' ); ?></strong>

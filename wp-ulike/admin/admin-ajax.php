@@ -22,13 +22,18 @@ if ( ! defined( 'WPINC' ) ) {
  * @return			Void
  */
 function wp_ulike_ajax_notice_handler() {
-    // Store it in the options table
-	if ( ! isset( $_POST['id'] ) ||  ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), '_notice_nonce' ) ) {
-		wp_send_json_error(  esc_html__( 'Token Error.', 'wp-ulike' ) );
-	} else {
-		wp_ulike_set_transient( 'wp-ulike-notice-' . sanitize_text_field( wp_unslash( $_POST['id' ] ) ), 1, absint( $_POST['expiration'] ) );
-		wp_send_json_success( esc_html__( 'It\'s OK.', 'wp-ulike' ) );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( esc_html__( 'Permission denied.', 'wp-ulike' ) );
 	}
+
+	if ( ! isset( $_POST['id'] ) || ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), '_notice_nonce' ) ) {
+		wp_send_json_error( esc_html__( 'Token Error.', 'wp-ulike' ) );
+	}
+
+	$expiration = isset( $_POST['expiration'] ) ? absint( $_POST['expiration'] ) : YEAR_IN_SECONDS;
+
+	wp_ulike_set_transient( 'wp-ulike-notice-' . sanitize_text_field( wp_unslash( $_POST['id'] ) ), 1, $expiration );
+	wp_send_json_success( esc_html__( 'It\'s OK.', 'wp-ulike' ) );
 }
 add_action( 'wp_ajax_wp_ulike_dismissed_notice', 'wp_ulike_ajax_notice_handler' );
 
@@ -226,7 +231,7 @@ function wp_ulike_localization_api(){
 		'Engagers'   => esc_html__('Engagers', 'wp-ulike'),
 
 		// Not found
-		'Something Went Wrong'	=> esc_html__( 'Something Went Wrong', 'wp-ulike' ),
+		'Something Went Wrong'	=> esc_html__( 'Something went wrong', 'wp-ulike' ),
 		'We encountered an error while loading the data. Please try refreshing the page or contact support if the problem persists.' => esc_html__( 'We encountered an error while loading the data. Please try refreshing the page or contact support if the problem persists.', 'wp-ulike' ),
 		'Page Not Found'	=> esc_html__( 'Page Not Found', 'wp-ulike' ),
 		'The page you are looking for does not exist. It may have been moved or deleted.' => esc_html__( 'The page you are looking for does not exist. It may have been moved or deleted.', 'wp-ulike' ),
@@ -331,7 +336,7 @@ function wp_ulike_save_settings_api(){
 	$values = json_decode( $json, true );
 
 	if ( ! is_array( $values ) ) {
-		wp_send_json_error( esc_html__( 'Error: Invalid request data. Expected an object with setting values.', 'wp-ulike' ) );
+		wp_send_json_error( esc_html__( 'Invalid request data. Expected an object with setting values.', 'wp-ulike' ) );
 	}
 
 	// Get settings API instance
@@ -411,7 +416,7 @@ function wp_ulike_save_customizer_api(){
 	$values = json_decode( $json, true );
 
 	if ( ! is_array( $values ) ) {
-		wp_send_json_error( esc_html__( 'Error: Invalid request data. Expected an object with customizer values.', 'wp-ulike' ) );
+		wp_send_json_error( esc_html__( 'Invalid request data. Expected an object with customizer values.', 'wp-ulike' ) );
 	}
 
 	// Get customizer API instance

@@ -67,23 +67,29 @@ if ( ! class_exists( 'wp_ulike_frontend_assets' ) ) {
 	     * @return void
 	     */
 	  	public function load_scripts() {
-			// Return if pro assets exist (Pro >= 1.5.3 includes free scripts, so don't load free version)
-			if( defined( 'WP_ULIKE_PRO_VERSION' ) && version_compare( WP_ULIKE_PRO_VERSION, '1.5.3', '>=' ) ){
+			// Return if pro assets exist (Pro >= 1.5.3 includes free scripts, so don't load free version).
+			if ( defined( 'WP_ULIKE_PRO_VERSION' ) && version_compare( WP_ULIKE_PRO_VERSION, '1.5.3', '>=' ) ) {
 				return;
 			}
 
 			//Add wp_ulike script file with special functions.
 			wp_ulike_enqueue_script_with_defer( 'wp_ulike', WP_ULIKE_ASSETS_URL . '/js/wp-ulike.min.js', array(), WP_ULIKE_VERSION );
 
-			wp_ulike_add_inline_script_data(
-				'wp_ulike',
-				'wp_ulike_params',
-				array(
-					'ajax_url'      => admin_url( 'admin-ajax.php' ),
-					'notifications' => wp_ulike_get_option( 'enable_toast_notice', true ),
-				)
-			);
+			wp_ulike_add_inline_script_data( 'wp_ulike', 'wp_ulike_params', $this->get_frontend_script_params() );
 	  	}
+
+		/**
+		 * Frontend params for the free voting script.
+		 *
+		 * @return array<string, mixed>
+		 */
+		private function get_frontend_script_params() {
+			return array(
+				'ajax_url'      => admin_url( 'admin-ajax.php' ),
+				'notifications' => wp_ulike_get_option( 'enable_toast_notice', true ),
+				'ajax_error'    => wp_ulike_setting_repo::getAjaxErrorNotice(),
+			);
+		}
 
 
 	}
