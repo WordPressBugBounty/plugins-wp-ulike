@@ -942,7 +942,6 @@ if ( ! class_exists( 'wp_ulike_admin_panel' ) ) {
                             'title' => sprintf( esc_html__('Select %s Page', 'wp-ulike'), esc_html__('Profile', 'wp-ulike') ),
                         ),
                     ), // First 2 fields from profiles section
-                    'upgrade_url' => WP_ULIKE_PLUGIN_URI . 'pricing/?utm_source=settings-page&utm_campaign=gopro&utm_medium=wp-dash&utm_content=profiles-section',
                     'read_more_url' => WP_ULIKE_PLUGIN_URI . 'blog/best-wordpress-profile-builder-plugin/?utm_source=settings-page&utm_campaign=gopro&utm_medium=wp-dash&utm_content=profiles-section',
                 ),
                 'forms' => array(
@@ -967,7 +966,6 @@ if ( ! class_exists( 'wp_ulike_admin_panel' ) ) {
                             'title' => esc_html__( 'Login Redirect URL', 'wp-ulike'),
                         ),
                     ), // First 2 fields from forms section
-                    'upgrade_url' => WP_ULIKE_PLUGIN_URI . 'pricing/?utm_source=settings-page&utm_campaign=gopro&utm_medium=wp-dash&utm_content=forms-section',
                     'read_more_url' => WP_ULIKE_PLUGIN_URI . 'blog/wordpress-ajax-login-registration-plugin/?utm_source=settings-page&utm_campaign=gopro&utm_medium=wp-dash&utm_content=forms-section',
                 ),
                 'social_logins' => array(
@@ -992,7 +990,6 @@ if ( ! class_exists( 'wp_ulike_admin_panel' ) ) {
                             'title' => esc_html__('Social networks', 'wp-ulike'),
                         ),
                     ), // First 2 fields from social_logins section (matches Pro exactly)
-                    'upgrade_url' => WP_ULIKE_PLUGIN_URI . 'pricing/?utm_source=settings-page&utm_campaign=gopro&utm_medium=wp-dash&utm_content=social-logins-section',
                     'read_more_url' => WP_ULIKE_PLUGIN_URI . 'blog/social-login/?utm_source=settings-page&utm_campaign=gopro&utm_medium=wp-dash&utm_content=social-logins-section',
                 ),
                 'share_buttons' => array(
@@ -1012,7 +1009,6 @@ if ( ! class_exists( 'wp_ulike_admin_panel' ) ) {
                             'title' => esc_html__('Add Share Items', 'wp-ulike'),
                         ),
                     ), // Share buttons uses group repeater style (matches Pro exactly - shows actual repeater)
-                    'upgrade_url' => WP_ULIKE_PLUGIN_URI . 'pricing/?utm_source=settings-page&utm_campaign=gopro&utm_medium=wp-dash&utm_content=share-buttons-section',
                     'read_more_url' => WP_ULIKE_PLUGIN_URI . 'blog/wordpress-ultimate-social-share-buttons/?utm_source=settings-page&utm_campaign=gopro&utm_medium=wp-dash&utm_content=share-buttons-section',
                 ),
                 'emails' => array(
@@ -1036,7 +1032,6 @@ if ( ! class_exists( 'wp_ulike_admin_panel' ) ) {
                             'title' => esc_html__( 'Admin E-mail Address', 'wp-ulike'),
                         ),
                     ), // First 2 fields from emails section
-                    'upgrade_url' => WP_ULIKE_PLUGIN_URI . 'pricing/?utm_source=settings-page&utm_campaign=gopro&utm_medium=wp-dash&utm_content=emails-section',
                     'read_more_url' => WP_ULIKE_PLUGIN_URI . 'blog/?utm_source=settings-page&utm_campaign=gopro&utm_medium=wp-dash&utm_content=emails-section',
                 )
             );
@@ -1055,7 +1050,15 @@ if ( ! class_exists( 'wp_ulike_admin_panel' ) ) {
                         'features'    => $config['features'],
                     ),
                     'fieldPattern' => $config['field_pattern'],
-                    'upgradeUrl'  => $config['upgrade_url'],
+                    'upgradeUrl'  => add_query_arg(
+                        array(
+                            'utm_source'   => 'settings-page',
+                            'utm_campaign' => 'gopro',
+                            'utm_medium'   => 'wp-dash',
+                            'utm_content'  => sanitize_key( $section ) . '-section',
+                        ),
+                        WP_ULIKE_PLUGIN_URI . 'upgrade/'
+                    ),
                     'readMoreUrl' => $config['read_more_url'],
                     'upgradeText' => esc_html__( 'Upgrade to Pro', 'wp-ulike' ),
                     'readMoreText' => esc_html__( 'Read More', 'wp-ulike' ),
