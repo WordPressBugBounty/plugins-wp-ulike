@@ -18,3 +18,4 @@ $attributes    = isset( $context['attributes'] ) && is_array( $context['attribut
 $wrapper_class = isset( $context['wrapperClass'] ) ? $context['wrapperClass'] : '';
 
 echo WP_Ulike_Top_Content_Renderer::render( $attributes, $wrapper_class ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+

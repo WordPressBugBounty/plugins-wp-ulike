@@ -1,7 +1,7 @@
 <?php
 /**
  * Utilities
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com
@@ -734,3 +734,4 @@ if ( ! function_exists( 'wp_ulike_read_php_input_capped' ) ) {
 		return $chunk;
 	}
 }
+

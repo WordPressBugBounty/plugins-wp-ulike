@@ -1,7 +1,7 @@
 <?php
 /**
  * WP ULike purge plugin cache
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com

@@ -1,7 +1,7 @@
 <?php
 /**
  * Deprecated WP ULike Process Class
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com

@@ -34,3 +34,4 @@ Copy these images from:
 ## Note
 
 If images are not present, the system will attempt to use Pro version images if Pro is active, or display placeholders in the admin interface.
+

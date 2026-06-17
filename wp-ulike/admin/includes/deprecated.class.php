@@ -69,3 +69,4 @@ if ( ! class_exists( 'CSF' ) && class_exists( 'ULF' ) ) {
         public function __construct() {}
     }
 }
+

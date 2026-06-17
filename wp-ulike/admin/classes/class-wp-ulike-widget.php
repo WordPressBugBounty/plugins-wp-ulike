@@ -1,7 +1,7 @@
 <?php
 /**
  * Class for our widget support
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com
@@ -491,7 +491,7 @@ if ( ! class_exists( 'wp_ulike_widget' ) ) {
 			// Deprecated: This method uses functions on columns which prevent index usage
 			// Use wp_ulike_get_period_limit_sql() instead for optimized queries
 			_deprecated_function( __METHOD__, '4.8.3', 'wp_ulike_get_period_limit_sql()' );
-			
+
 			// Return optimized version using the new function
 			$period_limit = wp_ulike_get_period_limit_sql( $period );
 			return $period_limit ? $period_limit : '';

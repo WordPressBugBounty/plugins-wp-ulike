@@ -1,7 +1,7 @@
 <?php
 /**
  * Class for logs process
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com
@@ -42,7 +42,7 @@ if ( ! class_exists( 'wp_ulike_logs' ) ) {
 			$table = esc_sql( $this->wpdb->prefix . $this->table );
 			$paged = absint( ( $this->page - 1 ) * $this->per_page );
 			$per_page = absint( $this->per_page );
-			
+
 			// Whitelist allowed order fields
 			$allowed_fields = array( 'id', 'date_time', 'user_id', 'ip', 'status' );
 			$orderBy = in_array( $this->sort['field'], $allowed_fields, true ) ? esc_sql( $this->sort['field'] ) : 'id';
@@ -75,7 +75,7 @@ if ( ! class_exists( 'wp_ulike_logs' ) ) {
 		 */
 		public function get_all_rows(){
 			$table = esc_sql( $this->wpdb->prefix . $this->table );
-			
+
 			// Whitelist allowed order fields
 			$allowed_fields = array( 'id', 'date_time', 'user_id', 'ip', 'status' );
 			$orderBy = in_array( $this->sort['field'], $allowed_fields, true ) ? esc_sql( $this->sort['field'] ) : 'id';
@@ -248,7 +248,7 @@ if ( ! class_exists( 'wp_ulike_logs' ) ) {
 				}
 			}
 			$all_category_ids = array_unique( $all_category_ids );
-			
+
 			// Batch load all categories
 			$categories_cache = array();
 			if ( ! empty( $all_category_ids ) ) {
@@ -307,7 +307,7 @@ if ( ! class_exists( 'wp_ulike_logs' ) ) {
 					$activity_link  = function_exists('bp_activity_get_permalink') ? bp_activity_get_permalink( $activity_id ) : '';
 					// Activity title
 					$activity_title = esc_html__('Activity Permalink','wp-ulike');
-					
+
 					// Use cached activity instead of creating new object to avoid N+1 queries
 					if( isset( $activities_cache[ $activity_id ] ) ){
 						$activity_obj = $activities_cache[ $activity_id ];

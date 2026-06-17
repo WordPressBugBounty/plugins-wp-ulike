@@ -141,3 +141,4 @@ $shortcode = '[wp_ulike ' . implode( ' ', $shortcode_args ) . ']';
 
 // Output the shortcode (it will be processed by WordPress)
 echo do_shortcode( $shortcode );
+

@@ -1,7 +1,7 @@
 <?php
 /**
  * Wp ULike FrontEnd Scripts Class.
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com

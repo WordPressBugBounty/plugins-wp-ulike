@@ -171,3 +171,4 @@ function wp_ulike_privacy_register_erasers( $erasers ) {
 
 add_filter( 'wp_privacy_personal_data_exporters', 'wp_ulike_privacy_register_exporters' );
 add_filter( 'wp_privacy_personal_data_erasers', 'wp_ulike_privacy_register_erasers' );
+

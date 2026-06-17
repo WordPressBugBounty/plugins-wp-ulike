@@ -1,7 +1,7 @@
 <?php
 /**
  * Back-end AJAX Functionalities
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com
@@ -448,4 +448,5 @@ function wp_ulike_customizer_preview_api(){
 	}
 }
 add_action('wp_ajax_wp_ulike_customizer_preview_api','wp_ulike_customizer_preview_api');
+
 

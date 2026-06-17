@@ -1,7 +1,7 @@
 <?php
 /**
  * General Hooks
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com
@@ -380,3 +380,4 @@ if( ! function_exists( 'wp_ulike_delete_activity_votes' ) ){
 	}
 	add_action( 'bp_activity_delete', 'wp_ulike_delete_activity_votes', 1, 10 );
 }
+

@@ -89,11 +89,11 @@ if ( ! class_exists( 'wp_ulike_css_generator' ) ) {
         protected function calculate_values_hash( $values ) {
             // Sort values recursively to ensure consistent hashing
             $sorted_values = $this->recursive_ksort( $values );
-            
+
             // Use wp_json_encode for better performance than serialize
             // and it's more compatible with modern PHP
             $json = wp_json_encode( $sorted_values, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
-            
+
             // Use md5 for fast hashing (security not a concern here, just change detection)
             return md5( $json );
         }
@@ -133,10 +133,10 @@ if ( ! class_exists( 'wp_ulike_css_generator' ) ) {
                 if ( ! class_exists( 'wp_ulike_customizer_api' ) ) {
                     return array();
                 }
-                
+
                 $customizer_api = new wp_ulike_customizer_api();
                 $schema = $customizer_api->get_schema();
-                
+
                 // Validate schema structure
                 if ( ! is_array( $schema ) || ! isset( $schema['pages'] ) ) {
                     return array();
@@ -770,7 +770,7 @@ if ( ! class_exists( 'wp_ulike_css_generator' ) ) {
             /**
              * Filter valid CSS properties for customizer output
              * Allows themes and plugins to extend supported CSS properties
-             * 
+             *
              * @param array $base_properties Base CSS properties
              * @return array Extended CSS properties
              */
@@ -822,7 +822,7 @@ if ( ! class_exists( 'wp_ulike_css_generator' ) ) {
                 }
 
                 // Length values (width, height, margin, padding, etc.)
-                if ( strpos( $prop_lower, 'width' ) !== false || 
+                if ( strpos( $prop_lower, 'width' ) !== false ||
                      strpos( $prop_lower, 'height' ) !== false ||
                      strpos( $prop_lower, 'margin' ) !== false ||
                      strpos( $prop_lower, 'padding' ) !== false ||
@@ -927,7 +927,7 @@ if ( ! class_exists( 'wp_ulike_css_generator' ) ) {
             $url = preg_replace( '/^url\s*\(\s*[\'"]?|[\'"]?\s*\)$/', '', $value );
 
             // Validate URL format
-            if ( filter_var( $url, FILTER_VALIDATE_URL ) || 
+            if ( filter_var( $url, FILTER_VALIDATE_URL ) ||
                  preg_match( '/^\/[^\/]/', $url ) || // Relative URL
                  preg_match( '/^data:image\/(png|jpg|jpeg|gif|svg|webp);base64,/', $url ) ) { // Data URI
                 // Ensure no javascript: or other dangerous protocols
@@ -964,10 +964,10 @@ if ( ! class_exists( 'wp_ulike_css_generator' ) ) {
             // Allow: "Font Name", 'Font Name', Font Name, font-name, etc.
             // Remove any dangerous content
             $sanitized = preg_replace( '/javascript:|expression\s*\(|@import/i', '', $value );
-            
+
             // Allow alphanumeric, spaces, hyphens, underscores, quotes, commas
             $sanitized = preg_replace( '/[^a-zA-Z0-9\s,\'":\-_]/', '', $sanitized );
-            
+
             return esc_attr( trim( $sanitized ) );
         }
 
@@ -1012,5 +1012,6 @@ if ( ! class_exists( 'wp_ulike_css_generator' ) ) {
         }
     }
 }
+
 
 

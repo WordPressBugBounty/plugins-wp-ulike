@@ -1,7 +1,7 @@
 <?php
 /**
  * Wp ULike Admin Customize
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com

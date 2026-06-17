@@ -1,7 +1,7 @@
 <?php
 /**
  * Third-Party Plugins
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com

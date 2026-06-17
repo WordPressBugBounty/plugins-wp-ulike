@@ -65,3 +65,4 @@ $total_votes = function_exists( 'wp_ulike_count_all_logs' ) ? (int) wp_ulike_cou
 		</form>
 	</div>
 </div>
+

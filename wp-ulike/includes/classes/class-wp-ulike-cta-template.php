@@ -1,7 +1,7 @@
 <?php
 /**
  * WP ULike Process Class
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com
@@ -27,23 +27,23 @@ if ( ! class_exists( 'wp_ulike_cta_template' ) ) {
 		 */
 		function __construct( $args ){
 			$this->args = $args;
-			
+
 			// Use singleton pattern instead of manual caching
 			$slug = $this->args['slug'];
 			$this->settings = wp_ulike_setting_type::get_instance( $slug );
-			
+
 			static $cached_methods = array();
 			if ( ! isset( $cached_methods[ $slug ] ) ) {
 				$cached_methods[ $slug ] = wp_ulike_setting_repo::getMethod( $slug );
 			}
 			$this->cached_method = $cached_methods[ $slug ];
-			
+
 			static $cached_counter_visible = array();
 			if ( ! isset( $cached_counter_visible[ $slug ] ) ) {
 				$cached_counter_visible[ $slug ] = wp_ulike_setting_repo::isCounterBoxVisible( $slug );
 			}
 			$this->cached_counter_visible = $cached_counter_visible[ $slug ];
-			
+
 			parent::__construct(array(
 				'item_type'   => $this->args['slug'],
 				'item_method' => $this->cached_method

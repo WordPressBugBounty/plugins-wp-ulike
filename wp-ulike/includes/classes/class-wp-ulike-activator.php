@@ -4,7 +4,7 @@
  *
  * Handles plugin activation and database table creation/upgrades.
  *
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com

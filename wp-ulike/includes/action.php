@@ -2,7 +2,7 @@
 /**
  * WP ULIKE Register Hook CLASS
  *
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com

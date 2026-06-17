@@ -231,3 +231,4 @@ class wp_ulike_uninstall {
 }
 
 new wp_ulike_uninstall();
+

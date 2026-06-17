@@ -17,28 +17,28 @@ class wp_ulike_setting_type {
 
 	/**
 	 * Get or create a setting type instance (singleton pattern per type)
-	 * 
+	 *
 	 * @param string $type
 	 * @return wp_ulike_setting_type
 	 */
 	public static function get_instance( $type ) {
 		// Normalize type to handle aliases
 		$normalized_type = self::normalize_type( $type );
-		
+
 		if ( ! isset( self::$instances[ $normalized_type ] ) ) {
 			self::$instances[ $normalized_type ] = new self( $normalized_type );
 		}
-		
+
 		return self::$instances[ $normalized_type ];
 	}
 
 	function __construct( $type ){
 		$this->setTypeSettings( $type );
 	}
-	
+
 	/**
 	 * Normalize type name to handle aliases
-	 * 
+	 *
 	 * @param string $type
 	 * @return string Normalized type
 	 */
@@ -55,7 +55,7 @@ class wp_ulike_setting_type {
 			'topics' => 'topic',
 			'likeThis' => 'post',
 		);
-		
+
 		return isset( $aliases[ $type ] ) ? $aliases[ $type ] : $type;
 	}
 

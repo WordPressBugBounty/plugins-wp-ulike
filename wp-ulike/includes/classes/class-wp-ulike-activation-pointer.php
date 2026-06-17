@@ -210,3 +210,4 @@ if ( ! class_exists( 'WP_Ulike_Activation_Pointer' ) ) {
 
 	WP_Ulike_Activation_Pointer::init();
 }
+

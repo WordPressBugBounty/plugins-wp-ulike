@@ -1,9 +1,9 @@
 <?php
 /**
  * WP ULike User Agent Parser
- * 
+ *
  * Lightweight, high-performance user agent parser without YAML dependencies
- * 
+ *
  * @package WP_ULike
  * @since 5.0.0
  */
@@ -17,49 +17,49 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Lightweight User Agent Parser Class
-		 * 
+		 *
 		 * Uses regex patterns and pattern matching for fast parsing
 		 */
 	class WP_Ulike_User_Agent_Parser {
 
 		/**
 		 * Parsed user agent data cache
-		 * 
+		 *
 		 * @var array
 		 */
 		private static $cache = array();
 
 		/**
 		 * User agent string
-		 * 
+		 *
 		 * @var string
 		 */
 		private $user_agent;
 
 		/**
 		 * Parsed client information
-		 * 
+		 *
 		 * @var array
 		 */
 		private $client_info = null;
 
 		/**
 		 * Parsed OS information
-		 * 
+		 *
 		 * @var array
 		 */
 		private $os_info = null;
 
 		/**
 		 * Is bot flag
-		 * 
+		 *
 		 * @var bool|null
 		 */
 		private $is_bot = null;
 
 		/**
 		 * Constructor
-		 * 
+		 *
 		 * @param string $user_agent User agent string
 		 */
 		public function __construct( $user_agent = '' ) {
@@ -68,7 +68,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Parse user agent and extract all information
-		 * 
+		 *
 		 * @return self
 		 */
 		public function parse() {
@@ -83,10 +83,10 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 			// Parse client (browser)
 			$this->client_info = $this->parse_client();
-			
+
 			// Parse OS
 			$this->os_info = $this->parse_os();
-			
+
 			// Check if bot
 			$this->is_bot = $this->check_bot();
 
@@ -102,7 +102,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Get client (browser) information
-		 * 
+		 *
 		 * @return array Array with 'name' and 'version' keys
 		 */
 		public function get_client() {
@@ -114,7 +114,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Get OS information
-		 * 
+		 *
 		 * @return array Array with 'name' and 'version' keys
 		 */
 		public function get_os() {
@@ -126,7 +126,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Check if user agent is a bot
-		 * 
+		 *
 		 * @return bool
 		 */
 		public function is_bot() {
@@ -138,7 +138,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Parse client (browser) from user agent
-		 * 
+		 *
 		 * @return array
 		 */
 		private function parse_client() {
@@ -205,7 +205,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Parse OS from user agent
-		 * 
+		 *
 		 * @return array
 		 */
 		private function parse_os() {
@@ -237,7 +237,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 			elseif ( preg_match( '/Linux/i', $ua ) && ! preg_match( '/Android/i', $ua ) ) {
 				$name = 'Linux';
 				$version = '0.0';
-				
+
 				// Try to detect Linux distribution
 				if ( preg_match( '/Ubuntu/i', $ua ) ) {
 					$name = 'Ubuntu';
@@ -263,7 +263,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Check if user agent is a bot
-		 * 
+		 *
 		 * @return bool
 		 */
 		private function check_bot() {
@@ -279,25 +279,25 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 				// Search engines
 				'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider',
 				'yandexbot', 'sogou', 'exabot', 'petalbot', 'applebot',
-				
+
 				// Social media bots
 				'facebookexternalhit', 'facebookcatalog', 'twitterbot', 'linkedinbot',
 				'pinterest', 'pinterestbot', 'slackbot', 'discordbot', 'telegrambot',
 				'whatsapp', 'line-poker', 'line-bot',
-				
+
 				// Content aggregators
 				'embedly', 'quora link preview', 'showyoubot', 'outbrain',
 				'flipboard', 'tumblr', 'bitlybot', 'skypeuripreview',
 				'nuzzel', 'bitrix link preview', 'xing-contenttabreceiver',
-				
+
 				// SEO/analytics bots
 				'semrushbot', 'ahrefsbot', 'mj12bot', 'dotbot', 'rogerbot',
 				'majestic', 'blexbot', 'screaming frog', 'siteauditbot',
-				
+
 				// Monitoring/validation
 				'w3c_validator', 'validator', 'chrome-lighthouse', 'gtmetrix',
 				'pingdom', 'uptimerobot', 'monitor', 'crawler',
-				
+
 				// Generic patterns
 				'bot', 'crawler', 'spider', 'scraper', 'crawl', 'fetcher',
 				'indexer', 'parser', 'checker', 'monitor', 'scanner',
@@ -314,7 +314,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Normalize version string
-		 * 
+		 *
 		 * @param string $version Version string
 		 * @return string Normalized version
 		 */
@@ -328,7 +328,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Normalize Windows version
-		 * 
+		 *
 		 * @param string $version Windows NT version
 		 * @return string Windows version name
 		 */
@@ -347,7 +347,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 
 		/**
 		 * Normalize macOS version
-		 * 
+		 *
 		 * @param string $version macOS version (e.g., 10_15_7)
 		 * @return string Normalized version (e.g., 10.15.7)
 		 */
@@ -358,7 +358,7 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 		/**
 		 * Clear static cache
 		 * Useful for testing or memory management
-		 * 
+		 *
 		 * @return void
 		 */
 		public static function clear_cache() {
@@ -366,3 +366,4 @@ if ( ! class_exists( 'WP_Ulike_User_Agent_Parser' ) ) {
 		}
 	}
 }
+

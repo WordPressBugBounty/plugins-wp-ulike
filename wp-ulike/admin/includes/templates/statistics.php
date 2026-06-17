@@ -1,7 +1,7 @@
 <?php
 /**
  * Statistics page template
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com

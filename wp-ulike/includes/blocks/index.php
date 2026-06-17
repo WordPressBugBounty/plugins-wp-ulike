@@ -1,7 +1,7 @@
 <?php
 /**
  * Blocks Registration
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com
@@ -463,3 +463,4 @@ function wp_ulike_get_templates_for_block() {
 		'default_template_key' => $default_template_key
 	);
 }
+

@@ -1,7 +1,7 @@
 <?php
 /**
  * Front-end AJAX Hooks
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com

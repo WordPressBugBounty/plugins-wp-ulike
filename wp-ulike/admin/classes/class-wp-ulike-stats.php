@@ -1,7 +1,7 @@
 <?php
 /**
  * Class for statistics process
- * 
+ *
  * @package    wp-ulike
  * @author     TechnoWich 2026
  * @link       https://wpulike.com
@@ -173,7 +173,7 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 	public function select_data( $table ){
 
 		$data_limit = apply_filters( 'wp_ulike_stats_data_limit', 30 );
-		
+
 		// Ensure data_limit is a positive integer for safety
 		$data_limit = max( 1, absint( $data_limit ) );
 
@@ -195,14 +195,14 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		// Use $data_limit for date range to match the data limit filter
 		// This ensures MySQL gets a constant value to compare against (most index-friendly)
 		$latest_timestamp = strtotime( $latest_date );
-		
+
 		// Safety check: ensure timestamp is valid
 		if( false === $latest_timestamp ) {
 			$result = new stdClass();
 			$result->labels = $result->counts = NULL;
 			return $result;
 		}
-		
+
 		// DAY_IN_SECONDS is a WordPress core constant (defined since WP 3.5)
 		$start_date = date( 'Y-m-d H:i:s', $latest_timestamp - ( $data_limit * DAY_IN_SECONDS ) );
 

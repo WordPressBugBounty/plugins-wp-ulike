@@ -1478,3 +1478,4 @@ if ( ! class_exists( 'WP_Ulike_Top_Content_Renderer' ) ) {
 		}
 	}
 }
+
