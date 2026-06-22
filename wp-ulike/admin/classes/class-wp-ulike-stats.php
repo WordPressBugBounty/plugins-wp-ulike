@@ -17,7 +17,7 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 	class wp_ulike_stats extends wp_ulike_widget{
 
 		// Private variables
-		private $wpdb, $tables;
+		private $wpdb, $tables, $active_tables = null;
 
 		/**
 		 * Instance of this class.
@@ -48,6 +48,10 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		 * @return			Array
 		 */
 		public function get_tables(){
+			if ( null !== $this->active_tables ) {
+				return $this->active_tables;
+			}
+
 			// Tables buffer
 			$get_tables = $this->tables;
 
@@ -60,7 +64,9 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 
 			}
 
-			return $get_tables;
+			$this->active_tables = $get_tables;
+
+			return $this->active_tables;
 		}
 
 		/**
@@ -69,14 +75,116 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		 * @return array
 		 */
 		public function get_all_data() {
+			$tables = $this->get_tables();
+			$meta   = wp_ulike_get_site_stats_meta( array_keys( $tables ) );
+
 			$output = array(
 				'overview' => $this->get_overview(),
-				'charts'   => $this->get_datasets(),
-				'items'    => $this->get_top_items(),
-				'metrics'  => $this->get_count_logs()
+				'meta'     => array_merge(
+					array(
+						'build'         => 'free',
+						'content_types' => array_keys( $tables ),
+						'woocommerce'   => array(
+							'active'           => class_exists( 'WooCommerce' ),
+							'report_available' => class_exists( 'WooCommerce' ),
+							'product_likes'    => false,
+							'review_likes'     => false,
+						),
+					),
+					$meta
+				),
 			);
 
 			return $output;
+		}
+
+		/**
+		 * Overview page data — charts, items, metrics loaded separately.
+		 *
+		 * @return array
+		 */
+		public function get_overview_api_data() {
+			return array(
+				'overview'   => $this->get_overview(),
+				'peak_hours' => $this->get_peak_hours(),
+			);
+		}
+
+		/**
+		 * Top content for a single type (free — no filters).
+		 *
+		 * @param string $type Content type key.
+		 * @param int    $limit Max items.
+		 * @return array|null
+		 */
+		public function get_tops_api_data( $type, $limit = 8 ) {
+			$limit = max( 1, min( 20, absint( $limit ) ) );
+
+			$tables = $this->get_tables();
+			if ( ! isset( $tables[ $type ] ) ) {
+				return null;
+			}
+
+			$items = $this->normalize_top_items( $this->get_top( $type ), $type );
+			return array(
+				'items' => array_slice( $items, 0, $limit ),
+				'total' => count( $items ),
+			);
+		}
+
+		/**
+		 * Normalize top rows for the React admin.
+		 *
+		 * @param array  $items Raw items.
+		 * @param string $type  Optional type hint.
+		 * @return array
+		 */
+		private function normalize_top_items( $items, $type = 'posts' ) {
+			if ( empty( $items ) || ! is_array( $items ) ) {
+				return array();
+			}
+
+			$normalized = array();
+
+			foreach ( $items as $item ) {
+				if ( ! is_array( $item ) ) {
+					continue;
+				}
+
+				$title = isset( $item['title'] ) ? $item['title'] : '';
+				if ( 'comments' === $type && empty( $title ) && ! empty( $item['author'] ) ) {
+					$title = $item['author'];
+				}
+
+				$normalized[] = array(
+					'title'       => $title,
+					'permalink'   => isset( $item['permalink'] ) ? $item['permalink'] : '',
+					'likes_count' => isset( $item['likes_count'] ) ? absint( $item['likes_count'] ) : 0,
+				);
+			}
+
+			return $normalized;
+		}
+
+		/**
+		 * Engagement data for a single content type.
+		 *
+		 * @param string $type Content type.
+		 * @return array|null
+		 */
+		public function get_engagement_api_data( $type ) {
+			$tables = $this->get_tables();
+
+			if ( ! isset( $tables[ $type ] ) ) {
+				return null;
+			}
+
+			$table = $tables[ $type ];
+
+			return array(
+				'chart'   => $this->dataset( $table ),
+				'metrics' => $this->get_type_count_logs( $table ),
+			);
 		}
 
 		/**
@@ -86,56 +194,27 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		 */
 		private function get_overview() {
 			return array(
-				'total'                => $this->count_all_logs('all'),
-				'today'                => $this->count_all_logs('today'),
-				'yesterday'            => $this->count_all_logs('yesterday')
+				'total'     => $this->count_all_logs( 'all' ),
+				'today'     => $this->count_all_logs( 'today' ),
+				'yesterday' => $this->count_all_logs( 'yesterday' ),
+				'week'      => $this->count_all_logs( 'week' ),
+				'last_week' => $this->count_all_logs( 'last_week' ),
 			);
 		}
 
-		// Get datasets for each table
-		private function get_datasets() {
-			$tables = $this->get_tables();
-			$datasets = array();
-
-			foreach ($tables as $type => $table) {
-				$datasets[$type] = $this->dataset($table);
-			}
-
-			return $datasets;
-		}
-
-		// Get top items for each type
-		private function get_top_items() {
-			$tables = $this->get_tables();
-			$top_items = array();
-
-			$top_items['posts']      = $this->get_top( 'posts' );
-			$top_items['comments']   = $this->get_top( 'comments' );
-			$top_items['activities'] = $this->get_top( 'activities' );
-			$top_items['topics']     = $this->get_top( 'topics' );
-			$top_items['engagers']   = $this->display_top_likers();
-
-			return $top_items;
-		}
-
-		// Get count logs for each table with different time ranges
-		private function get_count_logs() {
-			$tables = $this->get_tables();
-			$count_logs = array();
-
-			foreach ($tables as $type => $table) {
-				$count_logs[$type] = array(
-					'week'       => $this->count_logs(array("table" => $table, "date" => 'week')),
-					'last_week'  => $this->count_logs(array("table" => $table, "date" => 'last_week')),
-					'month'      => $this->count_logs(array("table" => $table, "date" => 'month')),
-					'last_month' => $this->count_logs(array("table" => $table, "date" => 'last_month')),
-					'year'       => $this->count_logs(array("table" => $table, "date" => 'year')),
-					'last_year'  => $this->count_logs(array("table" => $table, "date" => 'last_year')),
-					'all'        => $this->count_logs(array("table" => $table, "date" => 'all'))
-				);
-			}
-
-			return $count_logs;
+		/**
+		 * Count logs for a single table across standard time ranges.
+		 *
+		 * @param string $table Log table name (without prefix).
+		 * @return array
+		 */
+		private function get_type_count_logs( $table ) {
+			return array(
+				'week'  => $this->count_logs( array( 'table' => $table, 'date' => 'week' ) ),
+				'month' => $this->count_logs( array( 'table' => $table, 'date' => 'month' ) ),
+				'year'  => $this->count_logs( array( 'table' => $table, 'date' => 'year' ) ),
+				'all'   => $this->count_logs( array( 'table' => $table, 'date' => 'all' ) ),
+			);
 		}
 
 		/**
@@ -147,12 +226,10 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		 */
 		public function dataset( $table ){
 			$output  = array();
-			// Get data
 			$results = $this->select_data( $table );
 
-			// Create chart dataset
 			foreach( $results as $result ){
-				if( isset( $result->labels ) & isset( $result->counts ) ){
+				if( isset( $result->labels ) && isset( $result->counts ) ){
 					$output[]= [
 						'date'  => wp_date( "Y-m-d", strtotime( $result->labels ) ),
 						'total' => (int) $result->counts
@@ -184,11 +261,9 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 			SELECT MAX(date_time) FROM `{$table_escaped}`
 		" );
 
-		// If no data exists, return empty result
+		// If no data exists, return empty result set for chart consumers.
 		if( empty( $latest_date ) ) {
-			$result = new stdClass();
-			$result->labels = $result->counts = NULL;
-			return $result;
+			return array();
 		}
 
 		// Calculate start date in PHP for maximum index optimization
@@ -198,9 +273,7 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 
 		// Safety check: ensure timestamp is valid
 		if( false === $latest_timestamp ) {
-			$result = new stdClass();
-			$result->labels = $result->counts = NULL;
-			return $result;
+			return array();
 		}
 
 		// DAY_IN_SECONDS is a WordPress core constant (defined since WP 3.5)
@@ -225,8 +298,7 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		$result = $this->wpdb->get_results( $query );
 
 		if( empty( $result ) ) {
-			$result = new stdClass();
-			$result->labels = $result->counts = NULL;
+			return array();
 		}
 
 		return $result;
@@ -294,41 +366,6 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		}
 
 		/**
-		 * Display top likers in html format
-		 *
-		 * @return string
-		 */
-		public function display_top_likers(){
-			$top_likers = $this->get_top_likers();
-			$result     = [];
-
-			foreach ( $top_likers as $user ) {
-				$user_ID  = stripslashes( $user->user_id );
-				$userdata = get_userdata( $user_ID );
-				$username = empty( $userdata ) ? esc_html__('Guest User','wp-ulike') : esc_attr( $userdata->display_name );
-
-				$result[] = [
-					'permalink'   => get_edit_profile_url( $user_ID ),
-					'title'       => $username,
-					'likes_count' => absint($user->SumUser)
-				];
-			}
-
-			return $result;
-		}
-
-		/**
-		 * Top Likers Summary
-		 *
-		 * @author       	Alimir
-		 * @since           3.0
-		 * @return			Array
-		 */
-		public function get_top_likers(){
-			return wp_ulike_get_best_likers_info( 10, NULL );
-		}
-
-		/**
 		 * Tops Summaries
 		 *
 		 * @param string $type
@@ -360,29 +397,49 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		 * @return array
 		 */
 		public function top_posts() {
+			$post_type = get_post_types_by_support( array( 'title', 'editor', 'thumbnail' ) );
+			$post_type = apply_filters( 'wp_ulike_supported_post_types_for_top_posts_list', $post_type );
 
-			$posts       = wp_ulike_get_most_liked_posts( 10, '', 'post',  'all' );
-			$result      = [];
-			$is_distinct = wp_ulike_setting_repo::isDistinct( 'post' );
+			$item_info = wp_ulike_get_popular_items_info( array(
+				'type'     => 'post',
+				'rel_type' => $post_type,
+				'status'   => 'like',
+				'period'   => 'all',
+				'limit'    => 10,
+			) );
 
-			if( empty( $posts ) ){
-				return $result;
+			if ( empty( $item_info ) ) {
+				return array();
 			}
 
-			foreach ($posts as $post) {
-				// Check post title existence
-				if( empty( $post->post_title ) ){
+			$ids       = array();
+			$counters  = array();
+			foreach ( $item_info as $row ) {
+				$id              = (int) $row->item_ID;
+				$ids[]           = $id;
+				$counters[ $id ] = (int) $row->counter;
+			}
+
+			$posts = get_posts( apply_filters( 'wp_ulike_get_top_posts_query', array(
+				'post_type'      => $post_type,
+				'post_status'    => array( 'publish', 'inherit' ),
+				'post__in'       => $ids,
+				'orderby'        => 'post__in',
+				'posts_per_page' => 10,
+			) ) );
+
+			$result = array();
+			foreach ( $posts as $post ) {
+				if ( empty( $post->post_title ) ) {
 					continue;
 				}
 
-				$post_id       = wp_ulike_get_the_id( $post->ID );
-				$counter_value = wp_ulike_get_counter_value( $post_id, 'post', 'like', $is_distinct );
-
-				$result[] = [
-					'title'       => stripslashes($post->post_title),
-					'permalink'   => get_permalink($post_id),
-					'likes_count' => $counter_value
-				];
+				$post_id = wp_ulike_get_the_id( $post->ID );
+				$result[] = array(
+					'title'       => stripslashes( $post->post_title ),
+					'permalink'   => get_permalink( $post_id ),
+					'likes_count' => isset( $counters[ $post->ID ] ) ? $counters[ $post->ID ] : 0,
+				);
 			}
 
 			return $result;
@@ -394,27 +451,42 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		 * @return array
 		 */
 		public function top_comments() {
+			$post_type = get_post_types_by_support( array( 'title', 'editor', 'thumbnail' ) );
 
-			$comments    = wp_ulike_get_most_liked_comments( 10, '', 'all' );
-			$result      = [];
-			$is_distinct = wp_ulike_setting_repo::isDistinct( 'comment' );
+			$item_info = wp_ulike_get_popular_items_info( array(
+				'type'     => 'comment',
+				'rel_type' => '',
+				'status'   => 'like',
+				'period'   => 'all',
+				'limit'    => 10,
+			) );
 
-			if( empty( $comments ) ){
-				return $result;
+			if ( empty( $item_info ) ) {
+				return array();
 			}
 
-			foreach ($comments as $comment) {
-				$comment_author    = stripslashes($comment->comment_author);
-				$post_title        = get_the_title($comment->comment_post_ID);
-				$comment_permalink = get_comment_link($comment->comment_ID);
-				$counter_value     = wp_ulike_get_counter_value( $comment->comment_ID, 'comment', 'like', $is_distinct );
+			$ids      = array();
+			$counters = array();
+			foreach ( $item_info as $row ) {
+				$id              = (int) $row->item_ID;
+				$ids[]           = $id;
+				$counters[ $id ] = (int) $row->counter;
+			}
 
-				$result[] = [
-					'author'      => $comment_author,
-					'title'       => $post_title,
-					'permalink'   => $comment_permalink,
-					'likes_count' => $counter_value
-				];
+			$comments = get_comments( apply_filters( 'wp_ulike_get_top_comments_query', array(
+				'comment__in' => $ids,
+				'orderby'     => 'comment__in',
+				'post_type'   => $post_type,
+			) ) );
+
+			$result = array();
+			foreach ( $comments as $comment ) {
+				$result[] = array(
+					'author'      => stripslashes( $comment->comment_author ),
+					'title'       => get_the_title( $comment->comment_post_ID ),
+					'permalink'   => get_comment_link( $comment->comment_ID ),
+					'likes_count' => isset( $counters[ $comment->comment_ID ] ) ? $counters[ (int) $comment->comment_ID ] : 0,
+				);
 			}
 
 			return $result;
@@ -426,34 +498,52 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		 * @return void
 		 */
 		public function top_activities() {
-
-			if( ! defined( 'BP_VERSION' ) ) {
-				return [];
+			if ( ! defined( 'BP_VERSION' ) ) {
+				return array();
 			}
 
-			$activities  = wp_ulike_get_most_liked_activities( 10, 'all' );
-			$result      = [];
-			$is_distinct = wp_ulike_setting_repo::isDistinct( 'activity' );
+			global $wpdb;
 
-			if( empty( $activities ) ){
-				return $result;
+			$item_info = wp_ulike_get_popular_items_info( array(
+				'type'     => 'activity',
+				'rel_type' => '',
+				'status'   => 'like',
+				'period'   => 'all',
+				'limit'    => 10,
+			) );
+
+			if ( empty( $item_info ) ) {
+				return array();
 			}
 
-			foreach ($activities as $activity) {
-				$activity_permalink = function_exists('bp_activity_get_permalink') ? bp_activity_get_permalink( $activity->id ) : '';
-				$activity_action    = ! empty( $activity->content ) ? $activity->content : $activity->action;
-				$counter_value      = wp_ulike_get_counter_value( $activity->id, 'activity', 'like', $is_distinct );
+			$ids      = array();
+			$counters = array();
+			foreach ( $item_info as $row ) {
+				$id              = (int) $row->item_ID;
+				$ids[]           = $id;
+				$counters[ $id ] = (int) $row->counter;
+			}
 
-				// Skip empty activities
-				if( empty( $activity_action ) ){
+			$bp_prefix    = is_multisite() ? 'base_prefix' : 'prefix';
+			$table_name   = esc_sql( $wpdb->$bp_prefix . 'bp_activity' );
+			$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+			$activities   = $wpdb->get_results( $wpdb->prepare(
+				"SELECT * FROM `{$table_name}` WHERE `id` IN ({$placeholders}) ORDER BY FIELD(`id`, {$placeholders})",
+				array_merge( $ids, $ids )
+			) );
+
+			$result = array();
+			foreach ( (array) $activities as $activity ) {
+				$activity_action = ! empty( $activity->content ) ? $activity->content : $activity->action;
+				if ( empty( $activity_action ) ) {
 					continue;
 				}
 
-				$result[] = [
-					'permalink'   => $activity_permalink,
+				$result[] = array(
+					'permalink'   => function_exists( 'bp_activity_get_permalink' ) ? bp_activity_get_permalink( $activity->id ) : '',
 					'title'       => wp_strip_all_tags( $activity_action ),
-					'likes_count' => $counter_value
-				];
+					'likes_count' => isset( $counters[ (int) $activity->id ] ) ? $counters[ (int) $activity->id ] : 0,
+				);
 			}
 
 			return $result;
@@ -465,32 +555,113 @@ if ( ! class_exists( 'wp_ulike_stats' ) ) {
 		 * @return void
 		 */
 		public function top_topics() {
-
-			if( ! function_exists( 'is_bbpress' ) ) {
-				return [];
+			if ( ! function_exists( 'is_bbpress' ) ) {
+				return array();
 			}
 
-			$posts       = wp_ulike_get_most_liked_posts( 10, array( 'topic', 'reply' ), 'topic', 'all' );
-			$result      = [];
-			$is_distinct = wp_ulike_setting_repo::isDistinct( 'topic' );
+			$post_types = array( 'topic', 'reply' );
 
-			if( empty( $posts ) ){
-				return $result;
+			$item_info = wp_ulike_get_popular_items_info( array(
+				'type'     => 'topic',
+				'rel_type' => $post_types,
+				'status'   => 'like',
+				'period'   => 'all',
+				'limit'    => 10,
+			) );
+
+			if ( empty( $item_info ) ) {
+				return array();
 			}
 
-			foreach ($posts as $post) {
-				$post_title    = function_exists('bbp_get_forum_title') ? bbp_get_forum_title( $post->ID ) : $post->post_title;
-				$permalink     = 'topic' === get_post_type( $post->ID ) ? bbp_get_topic_permalink( $post->ID ) : bbp_get_reply_url( $post->ID );
-				$counter_value = wp_ulike_get_counter_value( $post->ID, 'topic', 'like', $is_distinct );
+			$ids      = array();
+			$counters = array();
+			foreach ( $item_info as $row ) {
+				$id              = (int) $row->item_ID;
+				$ids[]           = $id;
+				$counters[ $id ] = (int) $row->counter;
+			}
 
-				$result[] = [
+			$posts = get_posts( apply_filters( 'wp_ulike_get_top_posts_query', array(
+				'post_type'      => $post_types,
+				'post_status'    => array( 'publish', 'inherit' ),
+				'post__in'       => $ids,
+				'orderby'        => 'post__in',
+				'posts_per_page' => 10,
+			) ) );
+
+			$result = array();
+			foreach ( $posts as $post ) {
+				$post_title = function_exists( 'bbp_get_forum_title' ) ? bbp_get_forum_title( $post->ID ) : $post->post_title;
+				$permalink  = 'topic' === get_post_type( $post->ID ) ? bbp_get_topic_permalink( $post->ID ) : bbp_get_reply_url( $post->ID );
+
+				$result[] = array(
 					'title'       => $post_title,
 					'permalink'   => $permalink,
-					'likes_count' => $counter_value
-				];
+					'likes_count' => isset( $counters[ $post->ID ] ) ? $counters[ $post->ID ] : 0,
+				);
 			}
 
 			return $result;
+		}
+
+		/**
+		 * Hour-of-day engagement distribution (last 30 days).
+		 *
+		 * @return array
+		 */
+		public function get_peak_hours() {
+			$tables = $this->get_tables();
+
+			if ( empty( $tables ) ) {
+				return array();
+			}
+
+			$cache_key = sanitize_key( 'stats_peak_hours_' . md5( implode( ',', array_values( $tables ) ) ) );
+			$cached    = wp_cache_get( $cache_key, WP_ULIKE_SLUG );
+
+			if ( false !== $cached ) {
+				return $cached;
+			}
+
+			$union_parts = array();
+
+			foreach ( $tables as $table ) {
+				$table_escaped = esc_sql( $this->wpdb->prefix . $table );
+				$union_parts[] = "SELECT date_time FROM `{$table_escaped}` WHERE date_time >= NOW() - INTERVAL 30 DAY";
+			}
+
+			$query = sprintf(
+				"SELECT HOUR(date_time) AS hour_slot, COUNT(*) AS total_count
+				FROM ( %s ) AS combined
+				GROUP BY hour_slot
+				ORDER BY hour_slot ASC",
+				implode( ' UNION ALL ', $union_parts )
+			);
+
+			$results = $this->wpdb->get_results( $query );
+			$hours   = array_fill( 0, 24, 0 );
+
+			if ( ! empty( $results ) ) {
+				foreach ( $results as $row ) {
+					$slot = (int) $row->hour_slot;
+					if ( $slot >= 0 && $slot <= 23 ) {
+						$hours[ $slot ] = absint( $row->total_count );
+					}
+				}
+			}
+
+			$data = array();
+			for ( $h = 0; $h < 24; $h++ ) {
+				$data[] = array(
+					'hour'  => $h,
+					'label' => wp_date( 'g A', strtotime( sprintf( 'today %02d:00', $h ) ) ),
+					'count' => $hours[ $h ],
+				);
+			}
+
+			wp_cache_set( $cache_key, $data, WP_ULIKE_SLUG, 15 * MINUTE_IN_SECONDS );
+
+			return $data;
 		}
 
 		/**

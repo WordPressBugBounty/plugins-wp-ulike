@@ -33,7 +33,7 @@ $group_order    = array( 'engagement', 'setup', 'pro' );
 	</h1>
 
 	<p class="wp-ulike-about__lead">
-		<?php esc_html_e( 'Like buttons and engagement stats for your WordPress site. Configure display, check status, and open the tools you need below.', 'wp-ulike' ); ?>
+		<?php esc_html_e( 'Like buttons and a Statistics dashboard for your WordPress site. Open Statistics for charts and growth tips, or use the shortcuts below to configure display and check status.', 'wp-ulike' ); ?>
 	</p>
 
 	<?php if ( 'success' === $import_flash ) : ?>
@@ -193,7 +193,7 @@ $group_order    = array( 'engagement', 'setup', 'pro' );
 						<p class="wp-ulike-about-upsell__footnote"><?php echo esc_html( $upsell['footnote'] ); ?></p>
 					<?php endif; ?>
 					<p class="wp-ulike-about-upsell__actions">
-						<a class="button button-primary" href="<?php echo esc_url( $data['upgrade_url'] ?? WP_ULIKE_PLUGIN_URI . 'upgrade/' ); ?>" target="_blank" rel="noopener noreferrer">
+						<a class="button button-primary" href="<?php echo esc_url( $data['upgrade_url'] ?? add_query_arg( array( 'utm_source' => 'about-page', 'utm_campaign' => 'gopro', 'utm_medium' => 'wp-dash' ), WP_ULIKE_PLUGIN_URI . 'upgrade/' ) ); ?>" target="_blank" rel="noopener noreferrer">
 							<?php echo esc_html( $upsell['cta_label'] ?? __( 'Explore Pro', 'wp-ulike' ) ); ?>
 						</a>
 					</p>
@@ -288,11 +288,11 @@ $group_order    = array( 'engagement', 'setup', 'pro' );
 			<div class="wp-ulike-about-card wp-ulike-about-card--muted wp-ulike-about-backup" id="wp-ulike-settings-backup">
 				<h2 class="wp-ulike-about-card__title"><?php esc_html_e( 'Settings backup', 'wp-ulike' ); ?></h2>
 				<div class="wp-ulike-about-backup__actions">
-					<p class="wp-ulike-about-backup__intro"><?php esc_html_e( 'Download your settings and customizer values as JSON.', 'wp-ulike' ); ?></p>
+					<p class="wp-ulike-about-backup__intro"><?php echo esc_html( $data['backup_intro'] ?? '' ); ?></p>
 					<a class="button button-secondary" href="<?php echo esc_url( $data['export_url'] ?? '#' ); ?>"><?php esc_html_e( 'Export', 'wp-ulike' ); ?></a>
 					<details class="wp-ulike-about-backup__import"<?php echo $import_open ? ' open' : ''; ?>>
 						<summary><?php esc_html_e( 'Import settings', 'wp-ulike' ); ?></summary>
-						<form class="wp-ulike-about-backup__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data" onsubmit='return window.confirm(<?php echo wp_json_encode( __( 'Import will replace your current WP ULike settings and customizer values. Continue?', 'wp-ulike' ) ); ?>);'>
+						<form class="wp-ulike-about-backup__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data" onsubmit='return window.confirm(<?php echo wp_json_encode( $data['backup_import_confirm'] ?? __( 'Import will replace your current WP ULike settings and customizer values. Continue?', 'wp-ulike' ) ); ?>);'>
 							<input type="hidden" name="action" value="wp_ulike_import_settings" />
 							<input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $data['import_nonce'] ?? '' ); ?>" />
 							<label class="wp-ulike-about-backup__label" for="wp-ulike-settings-file"><?php esc_html_e( 'JSON file', 'wp-ulike' ); ?></label>
