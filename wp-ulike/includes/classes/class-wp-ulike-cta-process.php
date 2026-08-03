@@ -57,7 +57,7 @@ if ( ! class_exists( 'wp_ulike_cta_process' ) ) {
 				return 1;
 			} elseif( ! $this->isDistinct() ){
 				return 4;
-			} elseif( strpos( $this->getCurrentStatus(), 'un') === 0 ){
+			} elseif( strpos( (string) $this->getCurrentStatus(), 'un' ) === 0 ){
 				return 2;
 			} else {
 				return 3;
@@ -117,8 +117,9 @@ if ( ! class_exists( 'wp_ulike_cta_process' ) ) {
 					"id"                   => $this->parsedArgs['item_id'],
 					"method"               => $this->parsedArgs['item_type'],
 					"type"                 => 'process',
-					"table"                => $this->settings->getTableName(),
+					"table"                => $this->settings->getLegacyTableSuffix(),
 					"column"               => $this->settings->getColumnName(),
+					"item_type"            => $this->settings->getItemType(),
 					"key"                  => $this->settings->getKey(),
 					"slug"                 => $this->settings->getType(),
 					"cookie"               => $this->settings->getCookieName(),
@@ -145,8 +146,11 @@ if ( ! class_exists( 'wp_ulike_cta_process' ) ) {
 				'status'      => $this->getCurrentStatus(),
 				'has_log'     => ! $this->getPrevStatus() ? 0 : 1,
 				'slug'        => $this->parsedArgs['item_type'],
-				'table'       => $this->settings->getTableName(),
-				'is_distinct' => $this->isDistinct()
+				'table'       => $this->settings->getLegacyTableSuffix(),
+				'is_distinct' => $this->isDistinct(),
+				// Appended last so positional order stays stable for callbacks
+				// that accept more than 6 args (keys are stripped at fire time).
+				'item_type'   => $this->settings->getItemType(),
 			);
 		}
 
@@ -156,7 +160,13 @@ if ( ! class_exists( 'wp_ulike_cta_process' ) ) {
 		 * @return integer
 		 */
 		public function getCounterValue(){
-			$counter_val = wp_ulike_get_counter_value( $this->parsedArgs['item_id'], $this->parsedArgs['item_type'], $this->getCurrentStatus(), $this->isDistinct() );
+			// Always report the ACTIVE tally for the direction just acted on:
+			// after an unlike the button must show the remaining like count, not
+			// the number of unlike events. wp_ulike_get_counter_value_info() now
+			// honours unlike/undislike literally (for [wp_ulike_counter status="unlike"]),
+			// so the base status has to be resolved here.
+			$counter_status = wp_ulike_get_base_vote_status( $this->getCurrentStatus() );
+			$counter_val    = wp_ulike_get_counter_value( $this->parsedArgs['item_id'], $this->parsedArgs['item_type'], $counter_status, $this->isDistinct() );
 
 			// Hide if zero
 			if( wp_ulike_setting_repo::isCounterZeroHidden( $this->parsedArgs['item_type'] ) && $counter_val == 0 ){

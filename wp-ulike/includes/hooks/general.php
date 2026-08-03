@@ -20,14 +20,27 @@ if( ! function_exists( 'wp_ulike_put_posts' ) ){
 	/**
 	 * Auto insert wp_ulike function in the posts/pages content
 	 *
+	 * Uses standard WordPress conditional tags to scope the auto-insert to
+	 * the main loop on the frontend, outside of feeds and embeds.
+	 *
 	 * @param string $content
 	 * @since 1.0
 	 * @return string
 	 */
 	function wp_ulike_put_posts( $content ) {
-		// Early exit optimization: Check if auto-display is enabled before any processing
-		// This prevents unnecessary function calls and option lookups when disabled
+		// Auto-display is off, or we're outside the main frontend loop.
 		if ( ! WpUlikeInit::is_frontend() || ! in_the_loop() || ! is_main_query() || ! wp_ulike_setting_repo::isAutoDisplayOn('post') ) {
+			return apply_filters( 'wp_ulike_the_content', $content, $content );
+		}
+
+		// Excerpts / list snippets are opt-in (off by default) to avoid like spam on archives.
+		if ( 'the_excerpt' === current_filter() && ! wp_ulike_setting_repo::isAutoDisplayOnExcerpts() ) {
+			return apply_filters( 'wp_ulike_the_content', $content, $content );
+		}
+
+		// Standard WordPress context exclusions: feeds and embeds render in
+		// non-HTML / stripped contexts where the button would not work.
+		if ( is_feed() || is_embed() ) {
 			return apply_filters( 'wp_ulike_the_content', $content, $content );
 		}
 
@@ -251,6 +264,15 @@ if( ! function_exists( 'wp_ulike_load_deprecated_classes' ) ){
 	add_action( 'plugins_loaded', 'wp_ulike_load_deprecated_classes', 999 );
 }
 
+/**
+ * Safety net for the request-level user-state memos.
+ *
+ * updateUserMetaStatus() already flushes on the normal vote path; this covers
+ * callers that change a user's status by editing the meta directly (e.g. the
+ * Pro REST endpoint removing a vote) and then fire wp_ulike_after_process.
+ */
+add_action( 'wp_ulike_after_process', 'wp_ulike_flush_user_state_cache', 1 );
+
 
 if( ! function_exists( 'wp_ulike_run_php_snippets' ) ){
 	/**
@@ -329,6 +351,22 @@ if( ! function_exists( 'wp_ulike_delete_post_votes' ) ){
 		}
 
 		// delete comments if exist
+		if ( wp_ulike_use_pulse_queries() ) {
+			$comment_ids = get_comments(
+				array(
+					'post_id' => $ID,
+					'fields'  => 'ids',
+					'number'  => 0,
+				)
+			);
+			if ( ! empty( $comment_ids ) ) {
+				foreach ( $comment_ids as $comment_id ) {
+					wp_ulike_delete_vote_data( $comment_id, 'comment' );
+				}
+			}
+			return;
+		}
+
 		$comments = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT

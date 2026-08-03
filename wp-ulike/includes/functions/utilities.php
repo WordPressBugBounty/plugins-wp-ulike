@@ -595,6 +595,10 @@ if ( ! function_exists( 'wp_ulike_get_earliest_log_timestamp' ) ) {
 	 * @return int|null Unix timestamp or null when unknown.
 	 */
 	function wp_ulike_get_earliest_log_timestamp() {
+		if ( wp_ulike_use_pulse_queries() ) {
+			return WP_Ulike_Pulse_Log_Bridge::get_earliest_log_timestamp();
+		}
+
 		global $wpdb;
 
 		if ( ! class_exists( 'WP_Ulike_Overview' ) ) {
@@ -604,7 +608,7 @@ if ( ! function_exists( 'wp_ulike_get_earliest_log_timestamp' ) ) {
 		$selects = array();
 
 		foreach ( WP_Ulike_Overview::get_required_tables() as $label => $table_name ) {
-			if ( 'meta' === $label ) {
+			if ( 'meta' === $label || 'pulse' === $label ) {
 				continue;
 			}
 
@@ -813,6 +817,22 @@ if ( ! function_exists( 'wp_ulike_array_is_list' ) ) {
 		}
 
 		return array_keys( $array ) === range( 0, count( $array ) - 1 );
+	}
+}
+
+if ( ! function_exists( 'wp_ulike_do_action_ref_array' ) ) {
+	/**
+	 * Fire a hook with positional arguments (PHP 8 safe).
+	 *
+	 * PHP 8+ treats string keys passed through call_user_func_array() as
+	 * named parameters. Reindex so existing callbacks keep working.
+	 *
+	 * @param string $hook Hook name.
+	 * @param array  $args Arguments in callback order (keys ignored).
+	 * @return void
+	 */
+	function wp_ulike_do_action_ref_array( $hook, $args = array() ) {
+		do_action_ref_array( $hook, array_values( (array) $args ) );
 	}
 }
 

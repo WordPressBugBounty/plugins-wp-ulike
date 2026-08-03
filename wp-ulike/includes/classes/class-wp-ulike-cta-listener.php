@@ -135,11 +135,9 @@ final class wp_ulike_cta_listener extends wp_ulike_ajax_listener_base {
 
 			// Display likers
 			if( $this->data['displayLikers'] && ( ! wp_ulike_setting_repo::restrictLikersBox( $this->settings_type->getType() ) || $this->user ) && ! in_array( $this->response['status'], array(4,5) ) ){
-				$template = wp_ulike_get_likers_template(
-					$this->settings_type->getTableName(),
-					$this->settings_type->getColumnName(),
+				$template = wp_ulike_get_likers_template_for_type(
+					$this->settings_type->getItemType(),
 					$this->data['id'],
-					$this->settings_type->getSettingKey(),
 					array(
                 		'style' => $this->data['likersTemplate']
             		)
@@ -180,7 +178,7 @@ final class wp_ulike_cta_listener extends wp_ulike_ajax_listener_base {
 	* Provides hook for performing actions before a like/dislike
 	*/
 	private function beforeUpdateAction( $args = array() ){
-		do_action_ref_array('wp_ulike_before_process', $args );
+		wp_ulike_do_action_ref_array( 'wp_ulike_before_process', $args );
 	}
 
 	/**
@@ -188,7 +186,7 @@ final class wp_ulike_cta_listener extends wp_ulike_ajax_listener_base {
 	* Provides hook for performing actions after a like/dislike
 	*/
 	private function afterUpdateAction( $args = array() ){
-		do_action_ref_array( 'wp_ulike_after_process', $args );
+		wp_ulike_do_action_ref_array( 'wp_ulike_after_process', $args );
 	}
 
 	/**
