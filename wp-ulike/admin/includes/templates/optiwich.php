@@ -13,4 +13,4 @@
 	}
 ?>
 <noscript>You need to enable JavaScript to run this app.</noscript>
-<div id="optiwich-root"></div>
+<div id="optiwich-root"<?php echo is_rtl() ? ' dir="rtl"' : ''; ?>></div>

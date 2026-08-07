@@ -33,8 +33,9 @@ class WpUlikeInit {
     // init plugin
     $this->plugin();
 
-    // This hook is called once any activated plugins have been loaded.
-    add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
+    // Priority 20: run after Pro (plugins_loaded:10) registers customizer filters,
+    // so schema CSS rewrites include Pro Icon Color selectors (Fave/Smiley/Clap).
+    add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ), 20 );
 
     $prefix = is_network_admin() ? 'network_admin_' : '';
     add_filter( "{$prefix}plugin_action_links", array( $this, 'add_links' ), 10, 2 );
@@ -49,11 +50,63 @@ class WpUlikeInit {
   public function plugins_loaded(){
     wp_ulike_maybe_backfill_first_activated_at();
 
-    // Schema checks/upgrades only need to run where they can be observed and
-    // acted on (wp-admin, WP-Cron); skip them on plain, unauthenticated
-    // frontend requests to avoid extra queries and DDL on every pageview.
+    // Upgrades only where they can be observed/acted on — never on plain frontend.
     if ( self::is_admin_backend() || self::is_cron() ) {
       $this->maybe_upgrade_database();
+    }
+
+    // Customizer CSS rewrite needs admin hooks (wp_ulike_save_custom_css) and a
+    // fully booted WP stack ($wp_rewrite, textdomain). Admin + init only.
+    if ( self::is_admin_backend() ) {
+      add_action( 'init', array( $this, 'maybe_upgrade_customizer_css_cache' ), 20 );
+    }
+  }
+
+  /**
+   * Bust customizer CSS cache when plugin version or CSS schema revision changes.
+   *
+   * Values-hash alone does not invalidate when field output rules change.
+   * Also rewrites custom.css so file-based frontend delivery is not left stale.
+   *
+   * @return void
+   */
+  public function maybe_upgrade_customizer_css_cache() {
+    $stored_version = get_option( 'wp_ulike_version', '' );
+    $stored_schema  = get_option( 'wp_ulike_customizer_schema_revision', '' );
+    $schema_rev     = class_exists( 'wp_ulike_css_generator' )
+      ? wp_ulike_css_generator::SCHEMA_REVISION
+      : '';
+
+    $version_changed = ( $stored_version !== WP_ULIKE_VERSION );
+    $schema_changed  = ( $schema_rev !== '' && $stored_schema !== $schema_rev );
+
+    if ( ! $version_changed && ! $schema_changed ) {
+      return;
+    }
+
+    if ( class_exists( 'wp_ulike_css_generator' ) ) {
+      ( new wp_ulike_css_generator() )->clear_cache();
+    }
+
+    $upgraded = false;
+
+    // File delivery: rewrite uploads/wp-ulike/custom.css (admin hooks required).
+    if ( function_exists( 'wp_ulike_save_custom_css' ) ) {
+      wp_ulike_save_custom_css();
+      if ( $schema_changed ) {
+        update_option( 'wp_ulike_customizer_schema_revision', $schema_rev, true );
+      }
+      $upgraded = true;
+    } elseif ( $schema_changed && wp_ulike_is_true( get_option( 'wp_ulike_use_inline_custom_css', true ) ) ) {
+      // Inline delivery only needs the option cache cleared.
+      update_option( 'wp_ulike_customizer_schema_revision', $schema_rev, true );
+      $upgraded = true;
+    }
+
+    // Mark version current only after a successful upgrade path — never leave
+    // "version bumped, custom.css still stale" if save was unavailable.
+    if ( $upgraded && $version_changed ) {
+      update_option( 'wp_ulike_version', WP_ULIKE_VERSION, true );
     }
   }
 
@@ -61,6 +114,8 @@ class WpUlikeInit {
     $stored = get_option( 'wp_ulike_dbVersion', false );
 
     // Fresh installs set wp_ulike_dbVersion during activation.
+    // Do not CREATE on every admin load — that can spam MySQL when privileges fail.
+    // Missing tables are created only on activate, repair, or DB version upgrade.
     if ( false === $stored ) {
       return;
     }
@@ -90,10 +145,6 @@ class WpUlikeInit {
       }
 
       update_option( 'wp_ulike_dbVersion', $target );
-    }
-
-    if ( ! WP_Ulike_Meta_Schema::table_exists() || ! WP_Ulike_Pulse_Schema::table_exists() ) {
-      wp_ulike_activator::get_instance()->install_tables( false, false );
     }
   }
 
