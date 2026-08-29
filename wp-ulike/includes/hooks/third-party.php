@@ -35,10 +35,15 @@ if( ! function_exists( 'wp_ulike_put_buddypress' ) ){
 		}
 
 		if ( wp_ulike_setting_repo::isAutoDisplayOn('activity') ) {
+			// Same default as comments / Settings UI. Missing key used to
+			// hide the stream button while comments still appeared.
+			$position = ( isset( $options['auto_display_position'] ) && $options['auto_display_position'] !== '' )
+				? $options['auto_display_position']
+				: 'content';
 
 			switch ( $action ) {
 				case 'bp_activity_entry_meta':
-					if ( isset( $options['auto_display_position'] ) && $options['auto_display_position'] === 'meta' ){
+					if ( $position === 'meta' ){
 						echo wp_ulike_buddypress('put', array(
 							'id' => bp_get_activity_id()
 						));
@@ -46,7 +51,7 @@ if( ! function_exists( 'wp_ulike_put_buddypress' ) ){
 					break;
 
 				case 'bp_activity_entry_content':
-					if ( isset( $options['auto_display_position'] ) && $options['auto_display_position'] === 'content' ){
+					if ( $position === 'content' ){
 						echo wp_ulike_buddypress('put', array(
 							'id' => bp_get_activity_id()
 						));
@@ -72,7 +77,10 @@ if( ! function_exists( 'wp_ulike_buddypress_activity_content_ajax_display' ) ){
 		add_filter( 'bp_get_activity_content_body', function( $content ) use ( $activityID ){
 			$options = wp_ulike_get_option( 'buddypress_group' );
 			if ( wp_ulike_setting_repo::isAutoDisplayOn('activity') ) {
-				if ( isset( $options['auto_display_position'] ) && $options['auto_display_position'] === 'content' ){
+				$position = ( isset( $options['auto_display_position'] ) && $options['auto_display_position'] !== '' )
+					? $options['auto_display_position']
+					: 'content';
+				if ( $position === 'content' ){
 						return $content . wp_ulike_buddypress( 'put', array( 'id' => $activityID  ) );
 				}
 			}
