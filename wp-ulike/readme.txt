@@ -6,7 +6,7 @@ Tags: like button, like, voting, engagement, popular posts
 Requires PHP: 7.3.0
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 5.2.6
+Stable tag: 5.2.6.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -176,6 +176,9 @@ WP ULike works fully offline and stores all votes in your own database. It conta
 **Support chat (HelpWich).** WP ULike's admin pages show a chat button. Nothing loads until you click it; after that, the HelpWich chat widget loads on WP ULike admin pages for your account and receives only what you type or send in the chat. It never loads on the front end or for visitors. [Terms of service](https://helpwich.com/terms) | [Privacy policy](https://helpwich.com/privacy)
 
 == Changelog ==
+
+= 5.2.6.1 =
+* Fixed: Likers lists show again on buttons that use custom IDs, such as `[wp_ulike id="…"]` on items that are not posts. Hidden content (drafts, private and password-protected posts, unapproved comments, hidden activity, and private forums) stays hidden.
 
 = 5.2.6 =
 * Added: ULike Hub, the WP ULike icon in the admin bar with your new votes, the latest activity grouped by post ("Sara and 12 others liked…"), and a helpful tip. Each person sees only what is new to them (never their own votes), and the count updates live on admin screens. Turn it off in Settings → General.
